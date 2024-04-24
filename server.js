@@ -27,15 +27,31 @@ app.post('/improveEnglish', async (req, res) => {
     }
 });
 
+app.post('/improveEnglishCreative', async (req, res) => {
+    const text = req.body.text;
+    console.log("Received creative text to improve:", text);
+    try {
+        // Call improveEnglish with a higher temperature for creativity
+        const creativeText = await improveEnglish(text, 0.9);
+        console.log("Creative improved text:", creativeText);
+        res.json({ improvedText: creativeText });
+    } catch (error) {
+        console.error("Failed to improve text creatively:", error);
+        res.status(500).send("Failed to process the creative text.");
+    }
+});
 
-async function improveEnglish(text) {
+
+
+async function improveEnglish(text, temperature = 0.5) {
     const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${OPENAI_API_KEY}`
     };
     const data = {
         model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: text }]
+        messages: [{ role: "user", content: text }],
+        temperature: temperature  // Use the temperature parameter in the API call
     };
     try {
         const response = await axios.post(OPENAI_API_URL, data, { headers });
@@ -46,9 +62,10 @@ async function improveEnglish(text) {
         return improvedText;
     } catch (error) {
         console.error("Error calling the OpenAI API:", error.response ? error.response.data : error.message);
-        throw error;  // Re-throw the error to be caught by the calling function
+        throw error;
     }
 }
+
 
 
 app.listen(port, () => {

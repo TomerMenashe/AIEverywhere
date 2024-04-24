@@ -4,36 +4,36 @@ chrome.runtime.onInstalled.addListener(() => {
         title: "Improve English",
         contexts: ["selection"]
     });
-    chrome.contextMenus.create({
-        id: "improveGrammar",
-        title: "Improve English Grammar",
-        contexts: ["selection"]
-    });
+ chrome.contextMenus.create({
+    id: "improveEnglishCreative",
+    title: "Improve English - Creative",
+    contexts: ["selection"]
+});
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.selectionText) {
         switch(info.menuItemId) {
             case "improveEnglish":
-                improveTextUsingAPI(info.selectionText, tab.id, "style");
+                improveTextUsingAPI(info.selectionText, tab.id, 0.5);
                 break;
-            case "improveGrammar":
-                improveTextUsingAPI(info.selectionText, tab.id, "grammar");
+            case "improveEnglishCreative":
+                improveTextUsingAPI(info.selectionText, tab.id, 0.9);
                 break;
         }
     }
 });
 
-async function improveTextUsingAPI(text, tabId) {
+async function improveTextUsingAPI(text, tabId, temperature) {
     try {
-        const response = await fetch('http://localhost:3000/improveEnglish', {
+        const endpoint = temperature > 0.5 ? 'http://localhost:3000/improveEnglishCreative' : 'http://localhost:3000/improveEnglish';
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text: text })
         });
         if (!response.ok) {
-            const errorDetails = await response.text();  // Retrieve text of the error response
-            console.error(`Server responded with error: ${response.status} - ${errorDetails}`);
+            const errorDetails = await response.text();
             throw new Error(`Network response was not ok: ${response.status} - ${errorDetails}`);
         }
         const data = await response.json();
