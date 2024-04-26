@@ -60,6 +60,23 @@ app.post('/addCommentsToCode', async (req, res) => {
     }
 });
 
+// Define endpoint to summarize text
+app.post('/summarizeText', async (req, res) => {
+    const text = req.body.text;
+    if (!text) {
+        res.status(400).send("Text is required.");
+        return;
+    }
+    try {
+        const summarizedText = await summarizeText(text); // Your function to call OpenAI
+        res.json({ summarizedText });
+    } catch (error) {
+        console.error('Error summarizing text:', error);
+        res.status(500).send('Failed to summarize text.');
+    }
+});
+
+
 
 
 async function improveEnglish(text, temperature = 0.5) {
@@ -178,6 +195,44 @@ async function generateComments(code, temperature = 0.5) {
         throw new Error('Failed to fetch data from the OpenAI API.');
     }
 }
+
+async function summarizeText(text, temperature = 0.5) {
+    const headers = {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+    };
+
+    // Include a system message as a prompt to guide the AI on how to process the text
+    const data = {
+        model: 'gpt-3.5-turbo',  // Ensure this is the correct chat model identifier
+        messages: [
+            {
+                role: "system",
+                content: "Summarize the following text into a single coherent paragraph:"
+            },
+            {
+                role: "user",
+                content: text
+            }
+        ],
+        temperature,
+        max_tokens: 512  // Adjust max_tokens if necessary based on the expected length of the summary
+    };
+
+    try {
+        const response = await axios.post(OPENAI_API_URL, data, { headers });
+        if (response.data && response.data.choices && response.data.choices.length > 0) {
+            const summarizedText = response.data.choices[0].message.content.trim();
+            return summarizedText; // Returns only the summarized text
+        } else {
+            throw new Error('No valid response from OpenAI');
+        }
+    } catch (error) {
+        console.error("API Error:", error.response ? JSON.stringify(error.response.data) : error.message);
+        throw new Error('Failed to fetch data from the OpenAI API.');
+    }
+}
+
 
 
 

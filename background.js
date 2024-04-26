@@ -18,23 +18,24 @@ chrome.runtime.onInstalled.addListener(() => {
             title: "Add Comments to Code",
             contexts: ["selection"]
         });
+        chrome.contextMenus.create({
+            id: "summarizeText",
+            title: "Summarize to a Single Paragraph",
+            contexts: ["selection"]
+        });
     });
 });
 
 // Add event listener for context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-    // Check if text is selected
     if (info.selectionText) {
-        // Handle Improve English context menu clicks
-        if (info.menuItemId === "improveEnglish" || info.menuItemId === "improveEnglishCreative") {
-            // Determine temperature based on the selected context menu item
+        if (info.menuItemId === "summarizeText") {
+            // Call function to summarize text
+            summarizeText(info.selectionText, tab.id);
+        } else if (info.menuItemId === "improveEnglish" || info.menuItemId === "improveEnglishCreative") {
             const temperature = info.menuItemId === "improveEnglishCreative" ? 0.5 : 0.2;
-            // Call function to improve text using OpenAI API
             improveTextUsingAPI(info.selectionText, tab.id, temperature);
-        } 
-        // Handle Add Comments to Code context menu clicks
-        else if (info.menuItemId === "addComments" && info.selectionText) {
-            // Call function to add comments to selected code
+        } else if (info.menuItemId === "addComments") {
             addCommentsToCode(info.selectionText, tab.id);
         }
     }
@@ -86,6 +87,71 @@ async function addCommentsToCode(code, tabId) {
     }
 }
 
+
+// Function to summarize text
+async function summarizeText(text) {
+    const endpoint = 'http://localhost:3000/summarizeText'; // Make sure this endpoint is correctly implemented on your server
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text })
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to summarize text. Server responded with status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data.summary;
+    } catch (error) {
+        console.error('Error summarizing text:', error);
+        return null;
+    }
+}
+
+// Function to display the summary in a popup
+function displaySummaryInPopup(summary) {
+    const popup = document.createElement('div');
+    popup.id = 'summary-popup';
+    popup.style.position = 'fixed';
+    popup.style.bottom = '20px';
+    popup.style.right = '20px';
+    popup.style.padding = '10px';
+    popup.style.backgroundColor = 'white';
+    popup.style.border = '1px solid #ccc';
+    popup.style.borderRadius = '5px';
+    popup.style.zIndex = '10000';
+    popup.textContent = summary || 'Failed to summarize text.';
+    document.body.appendChild(popup);
+
+    // Optionally, close the popup after a delay
+    setTimeout(() => { popup.remove(); }, 10000); // Close after 10 seconds
+}
+
+// Add event listener for context menu clicks
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+    if (info.selectionText) {
+        if (info.menuItemId === "summarizeText") {
+            // Call function to summarize text
+            const summary = await summarizeText(info.selectionText);
+            displaySummaryInPopup(summary);
+        }
+    }
+});
+
+
+function sendErrorToTab(tabId, message) {
+    // Use the Chrome scripting API to run a script in the specified tab
+    chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        function: showAlert,
+        args: [message]  // Pass the error message to the function running in the tab
+    });
+
+    // This function will be injected and executed in the context of the specified tab
+    function showAlert(message) {
+        alert("Error: " + message);  // Display an alert with the error message
+    }
+}
 
 
 
