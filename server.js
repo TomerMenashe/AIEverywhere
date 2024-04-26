@@ -47,14 +47,19 @@ app.post('/improveEnglishCreative', async (req, res) => {
 });
 app.post('/addCommentsToCode', async (req, res) => {
     const code = req.body.code;
+    if (!code) {
+        res.status(400).send("Code is required.");
+        return;
+    }
     try {
-        const commentedCode = await generateComments(code);
+        const commentedCode = await generateComments(code); // Your function to call OpenAI
         res.json({ commentedCode });
     } catch (error) {
         console.error('Error adding comments to code:', error);
         res.status(500).send('Failed to add comments to code.');
     }
 });
+
 
 
 async function improveEnglish(text, temperature = 0.5) {
@@ -134,18 +139,6 @@ async function generateCreativeText(text, temperature = 0.7) {
     }
 }
 
-
-
-
-// Function to finalize text by extracting the text within double quotes
-// Function to finalize text by extracting the text after "as follows: "
-function finalizeText(text) {
-    // Find the index of "as follows: "
-    const startIndex = text.indexOf('as follows: "') + 'as follows: "'.length;
-    // Extract the text after "as follows: "
-    const improvedSentence = text.slice(startIndex).trim();
-    return improvedSentence;
-}
 
 
 

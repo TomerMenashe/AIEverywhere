@@ -65,12 +65,13 @@ async function improveTextUsingAPI(text, tabId, temperature) {
     }
 }
 
-async function addCommentsToCode(code, prompt, tabId) {
+async function addCommentsToCode(code, tabId) {
+    const endpoint = `http://localhost:3000/addCommentsToCode`; // Correct endpoint on your server
     try {
-        const response = await fetch('http://localhost:3000/addCommentsToCode', {
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: code, prompt: prompt })
+            body: JSON.stringify({ code: code }) // Send only the code; the server decides the prompt
         });
 
         if (!response.ok) {
@@ -84,6 +85,7 @@ async function addCommentsToCode(code, prompt, tabId) {
         sendErrorToTab(tabId, 'Failed to add comments to code.');
     }
 }
+
 
 
 
@@ -120,20 +122,48 @@ function replaceText(newText) {
         selection.removeAllRanges();
         selection.addRange(range);
     }
+}
 
-    function replaceCodeInPage(commentedCode) {
-        // Find the code element in the page (you might need to adjust this selector based on your page structure)
-        const codeElement = document.querySelector('pre code');
-        
+function replaceCodeInPage(commentedCode, tabId) {
+    // Script to execute in the tab context
+    const scriptToExecute = function(commentedCode) {
+        // Get the current selection
+        const selection = window.getSelection();
+        let range;
+        if (selection.rangeCount > 0) {
+            range = selection.getRangeAt(0);
+        }
+
+        // Try to find a parent element that can be considered a code container
+        const codeElement = range.commonAncestorContainer.closest('pre, code');
+
         if (codeElement) {
             // Replace the content of the code element with the commented code
             codeElement.textContent = commentedCode;
+
+            // Optionally, you can replace only the selected part of the code
+            // This would be more complex and depends on your specific requirements
         } else {
-            console.error('Error replacing code: Code element not found.');
+            console.error('Error replacing code: Suitable code element not found.');
+            alert('Error: No suitable code element found for replacing text.');
         }
-    }
-    
+    };
+
+    // Execute the script in the specified tab
+    chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        function: scriptToExecute,
+        args: [commentedCode]
+    }, (results) => {
+        // Handle any errors that occur during execution
+        if (chrome.runtime.lastError || results.length === 0 || !results[0].result) {
+            console.error('Failed to replace code in page:', chrome.runtime.lastError || 'No results returned.');
+        }
+    });
 }
+
+    
+
 
 
 
