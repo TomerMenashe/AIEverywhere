@@ -9,8 +9,8 @@ const app = express();
 const port = 3000;
 
 // Set OpenAI API key and endpoint
-const OPENAI_API_KEY = 'sk-proj-MHiDWEqoFNuANlZR20uzT3BlbkFJwYrCe1Efz5rzlsDthmEy';
-const OPENAI_API_URL = 'https://api.openai.com/v1/completions';
+const OPENAI_API_KEY = 'sk-proj-iWgMsC1oo6HlffQ39uAPT3BlbkFJ6eVOZidz9D0aiJ8m92Rc';
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 // Use middleware
 app.use(cors());
@@ -34,17 +34,15 @@ app.post('/improveEnglish', async (req, res) => {
 
 // Define endpoint to improve English text creatively
 app.post('/improveEnglishCreative', async (req, res) => {
-    // Get the text to improve from the request body
-    const text = req.body.text;
+    const text = req.body.text; // Original text to enhance
+    const creativityLevel = req.body.creativityLevel || 0.7; // Default to a higher creativity level
+
     try {
-        // Call function to improve English text creatively
-        const creativeText = await improveEnglish(text, 0.7);
-        // Send the creatively improved text as JSON response
-        res.json({ improvedText: creativeText });
+        const creativeText = await generateCreativeText(text, creativityLevel);
+        res.json({ creativeText });
     } catch (error) {
-        // Handle errors
-        console.error("Failed to improve text creatively:", error);
-        res.status(500).send("Failed to process the creative text.");
+        console.error('Failed to generate creative text:', error);
+        res.status(500).send('Error in text generation');
     }
 });
 app.post('/addCommentsToCode', async (req, res) => {
@@ -59,79 +57,137 @@ app.post('/addCommentsToCode', async (req, res) => {
 });
 
 
-// Function to improve English text using OpenAI API
-async function improveEnglish(text, temperature) {
-    // Set request headers
+async function improveEnglish(text, temperature = 0.5) {
     const headers = {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json'
     };
-    // Set request data
+
+    // Include a system message as a prompt to specify how the text should be processed
     const data = {
-        model: 'davinci-002', 
-        prompt: `Rewrite the following sentence with correct grammar and improved style, keeping the length similar: "${text}"`,
+        model: 'gpt-4',  // Ensure this is the correct chat model identifier
+        messages: [
+            {
+                role: "system",
+                content: "Rewrite the following sentence with correct grammar, ensuring clarity and proper style, as a grammar correction tool would:"
+            },
+            {
+                role: "user",
+                content: text
+            }
+        ],
         temperature,
-        max_tokens: text.split(" ").length + 10,
-        top_p: 1,
-        frequency_penalty: 0.5,
-        presence_penalty: 0
+        max_tokens: 512
     };
 
     try {
-        // Make a POST request to the OpenAI API
         const response = await axios.post(OPENAI_API_URL, data, { headers });
-        if (!response.data || !response.data.choices || response.data.choices.length === 0) {
-            throw new Error(`Invalid response from OpenAI: ${JSON.stringify(response.data)}`);
+        if (response.data && response.data.choices && response.data.choices.length > 0) {
+            const improvedText = response.data.choices[0].message.content.trim();
+            return improvedText; // Returns only the improved sentence
+        } else {
+            throw new Error('No valid response from OpenAI');
         }
-        // Extract and process the improved text
-        let improvedText = response.data.choices[0].text.trim();
-        improvedText = addPunctuation(capitalizeFirstLetter(improvedText));
-        return improvedText;
     } catch (error) {
-        // Handle errors
-        console.error("Detailed API error:", error.response ? JSON.stringify(error.response.data) : error.message);
+        console.error("API Error:", error.response ? JSON.stringify(error.response.data) : error.message);
         throw new Error('Failed to fetch data from the OpenAI API.');
     }
 }
 
-// Function to capitalize the first letter of a string
-function capitalizeFirstLetter(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
 
-// Function to add punctuation to the end of a string if necessary
-function addPunctuation(str) {
-    const lastChar = str.charAt(str.length - 1);
-    if (!/[.!?]/.test(lastChar)) {
-        return str + '.';
-    }
-    return str;
-}
 
-async function generateComments(code) {
+
+async function generateCreativeText(text, temperature = 0.7) {
     const headers = {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json'
     };
+
+    // Include a system message as a prompt to specify how the text should be processed
     const data = {
-        model: 'davinci-002', 
-        prompt: `Add comments to the following code:\n${code}`,
-        temperature: 0.5,
-        max_tokens: 150
+        model: 'gpt-4',  // Ensure this is the correct chat model identifier
+        messages: [
+            {
+                role: "system",
+                content: "Rewrite the following sentence with correct grammar, ensuring clarity and proper style, as a grammar correction tool would:"
+            },
+            {
+                role: "user",
+                content: text
+            }
+        ],
+        temperature,
+        max_tokens: 512
     };
 
     try {
         const response = await axios.post(OPENAI_API_URL, data, { headers });
-        if (!response.data || !response.data.choices || response.data.choices.length === 0) {
-            throw new Error('Failed to generate comments for code.');
+        if (response.data && response.data.choices && response.data.choices.length > 0) {
+            const improvedText = response.data.choices[0].message.content.trim();
+            return improvedText; // Returns only the improved sentence
+        } else {
+            throw new Error('No valid response from OpenAI');
         }
-        const commentedCode = response.data.choices[0].text.trim();
-        return commentedCode;
     } catch (error) {
-        console.error('Error generating comments:', error);
-        throw new Error('Failed to generate comments for code.');
+        console.error("API Error:", error.response ? JSON.stringify(error.response.data) : error.message);
+        throw new Error('Failed to fetch data from the OpenAI API.');
     }
 }
+
+
+
+
+// Function to finalize text by extracting the text within double quotes
+// Function to finalize text by extracting the text after "as follows: "
+function finalizeText(text) {
+    // Find the index of "as follows: "
+    const startIndex = text.indexOf('as follows: "') + 'as follows: "'.length;
+    // Extract the text after "as follows: "
+    const improvedSentence = text.slice(startIndex).trim();
+    return improvedSentence;
+}
+
+
+
+async function generateComments(code, temperature = 0.5) {
+    const headers = {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+    };
+
+    // Include a system message as a prompt to guide the AI on how to process the code
+    const data = {
+        model: 'gpt-4',  // Ensure this is the correct chat model identifier
+        messages: [
+            {
+                role: "system",
+                content: "Provide professional comments for this code as a professional programmer would:"
+            },
+            {
+                role: "user",
+                content: code
+            }
+        ],
+        temperature,
+        max_tokens: 512  // Adjust max_tokens if necessary based on the expected length of comments
+    };
+
+    try {
+        const response = await axios.post(OPENAI_API_URL, data, { headers });
+        if (response.data && response.data.choices && response.data.choices.length > 0) {
+            const commentedCode = response.data.choices[0].message.content.trim();
+            return commentedCode; // Returns only the commented code
+        } else {
+            throw new Error('No valid response from OpenAI');
+        }
+    } catch (error) {
+        console.error("API Error:", error.response ? JSON.stringify(error.response.data) : error.message);
+        throw new Error('Failed to fetch data from the OpenAI API.');
+    }
+}
+
+
+
 
 
 // Start the server

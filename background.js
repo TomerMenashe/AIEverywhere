@@ -33,7 +33,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
             improveTextUsingAPI(info.selectionText, tab.id, temperature);
         } 
         // Handle Add Comments to Code context menu clicks
-        else if (info.menuItemId === "addComments") {
+        else if (info.menuItemId === "addComments" && info.selectionText) {
             // Call function to add comments to selected code
             addCommentsToCode(info.selectionText, tab.id);
         }
@@ -65,79 +65,80 @@ async function improveTextUsingAPI(text, tabId, temperature) {
     }
 }
 
-function addCommentsToCode(selectedText, tabId) {
-    // Send the selected code to the server to add comments
-    fetch('http://localhost:3000/addCommentsToCode', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ code: selectedText })
-    })
-    .then(response => {
+async function addCommentsToCode(code, prompt, tabId) {
+    try {
+        const response = await fetch('http://localhost:3000/addCommentsToCode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code, prompt: prompt })
+        });
+
         if (!response.ok) {
-            throw new Error('Failed to add comments to code');
+            throw new Error(`Failed to add comments to code. Server responded with status: ${response.status}`);
         }
-        return response.json();
-    })
-    .then(data => {
-        // Integrate the comments into the original code
-        const integratedCode = integrateComments(selectedText, data.commentedCode);
-        
-        // Replace the selected code with the integrated code
-        replaceSelectedText(integratedCode, tabId);
-    })
-    .catch(error => {
+
+        const data = await response.json();
+        replaceCodeInPage(data.commentedCode, tabId); // Ensure tabId is passed correctly here
+    } catch (error) {
         console.error('Error adding comments to code:', error);
-        // Handle error
-    });
+        sendErrorToTab(tabId, 'Failed to add comments to code.');
+    }
 }
 
 
 
-
-
-
-// Function to replace the selected text in the browser tab
 function replaceSelectedText(newText, tabId) {
     chrome.scripting.executeScript({
-        target: { tabId: tabId },
+        target: { tabId },
         function: replaceText,
         args: [newText]
     });
 }
 
-// Function to send an error message to the browser tab
-function sendErrorToTab(tabId, message) {
-    chrome.tabs.sendMessage(tabId, { type: "error", text: message });
-}
 
-// Function to replace the selected text in the browser tab
 function replaceText(newText) {
     const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-    const range = selection.getRangeAt(0);
-    range.deleteContents();
-    range.insertNode(document.createTextNode(newText));
-}
+    if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
 
-function integrateComments(originalCode, commentedCode) {
-    const originalLines = originalCode.split('\n');
-    const commentedLines = commentedCode.split('\n');
+        // Create a container element to insert text
+        const div = document.createElement('div');
+        div.style.whiteSpace = 'pre-wrap'; // Preserves whitespace but wraps text
 
-    // Loop through each line of the original code and add comments if available
-    let integratedCode = '';
-    for (let i = 0; i < originalLines.length; i++) {
-        integratedCode += originalLines[i];
-        if (commentedLines[i]) {
-            // Add generated comments as additional lines
-            integratedCode += '\n\n// ' + commentedLines[i];
-        }
-        integratedCode += '\n'; // Add a new line after each original line
+        // Split text into lines to handle natural breaks
+        newText.split('\n').forEach(line => {
+            const paragraph = document.createElement('p');
+            paragraph.textContent = line;
+            div.appendChild(paragraph);
+        });
+
+        // Insert the formatted text into the document
+        range.insertNode(div);
+
+        // Clear the selection to avoid visual confusion after inserting the text
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
 
-    // Join the lines back together to get the integrated code
-    return integratedCode;
+    function replaceCodeInPage(commentedCode) {
+        // Find the code element in the page (you might need to adjust this selector based on your page structure)
+        const codeElement = document.querySelector('pre code');
+        
+        if (codeElement) {
+            // Replace the content of the code element with the commented code
+            codeElement.textContent = commentedCode;
+        } else {
+            console.error('Error replacing code: Code element not found.');
+        }
+    }
+    
 }
+
+
+
+
+
+
 
 
