@@ -1,9 +1,15 @@
 {
     "manifest_version": 3,
-    "name": "English Improver",
+    "name": "AIEverywhere",
     "version": "1.0",
     "description": "A Chrome extension to improve English text using the OpenAI API.",
-    "permissions": ["contextMenus", "activeTab"],
+    "permissions": [
+        "contextMenus",
+        "activeTab",
+        "storage",
+        "scripting",
+        "tabs"
+    ],
     "background": {
         "service_worker": "background.js"
     },
@@ -19,5 +25,14 @@
         "16": "icons/icon16.png",
         "48": "icons/icon48.png",
         "128": "icons/icon128.png"
-    }
+    },
+    "host_permissions": [
+        "http://localhost:3000/*"
+    ],
+    "content_scripts": [
+        {
+          "matches": ["*://*/*"],
+          "js": ["content-script.js"]
+        }]
+        
 }

@@ -27,16 +27,21 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 // Add event listener for context menu clicks
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.selectionText) {
-        if (info.menuItemId === "summarizeText") {
-            // Call function to summarize text
-            summarizeText(info.selectionText, tab.id);
-        } else if (info.menuItemId === "improveEnglish" || info.menuItemId === "improveEnglishCreative") {
-            const temperature = info.menuItemId === "improveEnglishCreative" ? 0.5 : 0.2;
-            improveTextUsingAPI(info.selectionText, tab.id, temperature);
-        } else if (info.menuItemId === "addComments") {
-            addCommentsToCode(info.selectionText, tab.id);
+        try {
+            if (info.menuItemId === "summarizeText") {
+                const summary = await summarizeText(info.selectionText);
+                sendTextToTab(tab.id, summary);
+            } else if (info.menuItemId === "improveEnglish" || info.menuItemId === "improveEnglishCreative") {
+                const temperature = info.menuItemId === "improveEnglishCreative" ? 0.5 : 0.2;
+                await improveTextUsingAPI(info.selectionText, tab.id, temperature);
+            } else if (info.menuItemId === "addComments") {
+                await addCommentsToCode(info.selectionText, tab.id);
+            }
+        } catch (error) {
+            console.error('Error processing request:', error);
+            sendErrorToTab(tab.id, "Failed to process request. Please try again later.");
         }
     }
 });
@@ -90,7 +95,8 @@ async function addCommentsToCode(code, tabId) {
 
 // Function to summarize text
 async function summarizeText(text) {
-    const endpoint = 'http://localhost:3000/summarizeText'; // Make sure this endpoint is correctly implemented on your server
+    console.log("Sending request to server to summarize text.");
+    const endpoint = 'http://localhost:3000/summarizeText'; 
     try {
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -101,42 +107,12 @@ async function summarizeText(text) {
             throw new Error(`Failed to summarize text. Server responded with status: ${response.status}`);
         }
         const data = await response.json();
-        return data.summary;
+        return data.summarizedText; // Ensure you are returning the correct field from the response
     } catch (error) {
         console.error('Error summarizing text:', error);
         return null;
     }
 }
-
-// Function to display the summary in a popup
-function displaySummaryInPopup(summary) {
-    const popup = document.createElement('div');
-    popup.id = 'summary-popup';
-    popup.style.position = 'fixed';
-    popup.style.bottom = '20px';
-    popup.style.right = '20px';
-    popup.style.padding = '10px';
-    popup.style.backgroundColor = 'white';
-    popup.style.border = '1px solid #ccc';
-    popup.style.borderRadius = '5px';
-    popup.style.zIndex = '10000';
-    popup.textContent = summary || 'Failed to summarize text.';
-    document.body.appendChild(popup);
-
-    // Optionally, close the popup after a delay
-    setTimeout(() => { popup.remove(); }, 10000); // Close after 10 seconds
-}
-
-// Add event listener for context menu clicks
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-    if (info.selectionText) {
-        if (info.menuItemId === "summarizeText") {
-            // Call function to summarize text
-            const summary = await summarizeText(info.selectionText);
-            displaySummaryInPopup(summary);
-        }
-    }
-});
 
 
 function sendErrorToTab(tabId, message) {
@@ -152,6 +128,79 @@ function sendErrorToTab(tabId, message) {
         alert("Error: " + message);  // Display an alert with the error message
     }
 }
+
+function sendTextToTab(tabId, text) {
+    chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        function: displayText,
+        args: ['summery', text]
+    });
+
+    function displayText(title, text) {
+        // Create a new <div> element to display the title, text, and cancel button
+        const div = document.createElement('div');
+        div.style.position = 'fixed';
+        div.style.top = '50%';
+        div.style.left = '50%';
+        div.style.transform = 'translate(-50%, -50%)';
+        div.style.backgroundColor = '#f8f9fa'; // Light gray background
+        div.style.padding = '20px';
+        div.style.borderRadius = '8px'; // Rounded corners
+        div.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)'; // Shadow effect
+        div.style.zIndex = '9999'; // Ensure it's on top
+
+        // Create a <h2> element for the title
+        const titleElement = document.createElement('h2');
+        titleElement.textContent = title;
+        titleElement.style.fontSize = '20px'; // Larger font size for the title
+        titleElement.style.color = '#333'; // Darker text color
+        titleElement.style.marginBottom = '10px'; // Spacing between title and text
+        // Append the <h2> element to the <div>
+        div.appendChild(titleElement);
+
+        // Create a <p> element to display the text
+        const paragraph = document.createElement('p');
+        paragraph.textContent = text;
+        paragraph.style.fontSize = '16px'; // Font size for the text
+        paragraph.style.color = '#666'; // Slightly darker text color
+        paragraph.style.marginBottom = '20px'; // Spacing between text and button
+        // Append the <p> element to the <div>
+        div.appendChild(paragraph);
+
+        // Create a <button> element for the cancel button
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Cancel';
+        cancelButton.style.backgroundColor = '#dc3545'; // Red background color
+        cancelButton.style.color = '#fff'; // White text color
+        cancelButton.style.border = 'none'; // No border
+        cancelButton.style.padding = '10px 20px'; // Padding
+        cancelButton.style.borderRadius = '4px'; // Rounded corners
+        cancelButton.style.cursor = 'pointer'; // Pointer cursor
+        cancelButton.style.transition = 'background-color 0.3s ease'; // Smooth hover effect
+        cancelButton.style.fontWeight = 'bold'; // Bold text
+        cancelButton.style.fontSize = '14px'; // Smaller font size
+        cancelButton.style.outline = 'none'; // Remove focus outline
+        cancelButton.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'; // Shadow effect
+        cancelButton.style.margin = '0 auto'; // Center the button
+        // Hover effect
+        cancelButton.addEventListener('mouseenter', () => {
+            cancelButton.style.backgroundColor = '#c82333'; // Darker red on hover
+        });
+        cancelButton.addEventListener('mouseleave', () => {
+            cancelButton.style.backgroundColor = '#dc3545'; // Original red on hover out
+        });
+        // Click event listener to remove the <div> element when cancel button is clicked
+        cancelButton.onclick = function() {
+            div.remove();
+        };
+        // Append the cancel button to the <div>
+        div.appendChild(cancelButton);
+
+        // Append the <div> to the body
+        document.body.appendChild(div);
+    }
+}
+
 
 
 
@@ -214,7 +263,6 @@ function replaceCodeInPage(commentedCode, tabId) {
             alert('Error: No suitable code element found for replacing text.');
         }
     };
-
     // Execute the script in the specified tab
     chrome.scripting.executeScript({
         target: { tabId: tabId },
@@ -227,6 +275,8 @@ function replaceCodeInPage(commentedCode, tabId) {
         }
     });
 }
+
+
 
     
 
