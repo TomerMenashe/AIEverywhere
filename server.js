@@ -176,7 +176,7 @@ async function generateCreativeText(text, temperature = 0.7) {
 
 
 
-async function generateComments(code, temperature = 0.5) {
+async function generateComments(code, temperature = 0.2) {
     const headers = {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json'
@@ -188,7 +188,7 @@ async function generateComments(code, temperature = 0.5) {
         messages: [
             {
                 role: "system",
-                content: "Provide professional comments for this code as a professional programmer would:"
+                content: "Given code , please add professional comments as a senior developer would. Focus on explaining complex logic, key decisions, and critical sections only. Ensure the comments are clear, concise, and informative, aiding any new developer in quickly understanding the code’s purpose and operation. The comments should adhere to best practices in coding and documentation:"
             },
             {
                 role: "user",
@@ -196,7 +196,7 @@ async function generateComments(code, temperature = 0.5) {
             }
         ],
         temperature,
-        max_tokens: 512  // Adjust max_tokens if necessary based on the expected length of comments
+        max_tokens: 1000  // Adjust max_tokens if necessary based on the expected length of comments
     };
 
     try {
@@ -262,7 +262,7 @@ async function AIQuiz(text, temperature = 0.5) {
         messages: [
             {
                 role: "system",
-                content: "Generate a 10-question multiple-choice quiz based on the provided text. Each question should have four answer options. Clearly format each question with a number followed by a period and end with a question mark. Mark the correct answer by appending '**' befor and after the correct option. Ensure that each question and its answers are on new lines, and separate each question with a blank line for clarity:"
+                content: "Generate a 10-question multiple-choice quiz based on the provided text. Each question should have four answer options. Clearly format each question with a number followed by a period and end with a question mark. Mark the correct answer by appending '**' befor and after the correct option and write it only once. Ensure that each question and its answers are on new lines, and separate each question with a blank line for clarity:"
             },
             {
                 role: "user",

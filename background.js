@@ -316,42 +316,48 @@ function replaceText(newText) {
     }
 }
 
-function replaceCodeInPage(commentedCode, tabId) {
-    // Script to execute in the tab context
+/**
+ * Replaces code within an HTML page in a specified browser tab.
+ * @param {string} commentedCode - The new code with comments that will replace the existing code.
+ * @param {number} tabId - The ID of the browser tab where the code replacement will occur.
+ */
+ function replaceCodeInPage(commentedCode, tabId) {
+    /**
+     * This internal function will be executed in the context of the specified tab.
+     * It uses the current selection to find and replace the contents of a code element.
+     * @param {string} commentedCode - Code to inject into the code element found in the page.
+     */
     const scriptToExecute = function(commentedCode) {
-        // Get the current selection
+        // Obtain the current text selection in the window
         const selection = window.getSelection();
         let range;
+        // If there is a selected range, use the first range to define the bounds
         if (selection.rangeCount > 0) {
             range = selection.getRangeAt(0);
         }
 
-        // Try to find a parent element that can be considered a code container
+        // Attempt to locate a parent element that is suitable for holding code (i.e., <pre> or <code>)
         const codeElement = range.commonAncestorContainer.closest('pre, code');
 
         if (codeElement) {
-            // Replace the content of the code element with the commented code
+            // Directly replace the text content of the code element with the new code
             codeElement.textContent = commentedCode;
-
-            // Optionally, you can replace only the selected part of the code
-            // This would be more complex and depends on your specific requirements
         } else {
+            // Log an error to the console and alert the user if no appropriate code element is found
             console.error('Error replacing code: Suitable code element not found.');
             alert('Error: No suitable code element found for replacing text.');
         }
     };
-    // Execute the script in the specified tab
+
+    // Execute the above script in the tab identified by tabId
     chrome.scripting.executeScript({
         target: { tabId: tabId },
         function: scriptToExecute,
         args: [commentedCode]
-    }, (results) => {
-        // Handle any errors that occur during execution
-        if (chrome.runtime.lastError || results.length === 0 || !results[0].result) {
-            console.error('Failed to replace code in page:', chrome.runtime.lastError || 'No results returned.');
-        }
-    });
+    },
+    );
 }
+
 
 
 
