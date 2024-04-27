@@ -28,11 +28,5 @@
     },
     "host_permissions": [
         "http://localhost:3000/*"
-    ],
-    "content_scripts": [
-        {
-          "matches": ["*://*/*"],
-          "js": ["content-script.js"]
-        }]
-        
+    ]       
 }

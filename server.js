@@ -45,6 +45,7 @@ app.post('/improveEnglishCreative', async (req, res) => {
         res.status(500).send('Error in text generation');
     }
 });
+
 app.post('/addCommentsToCode', async (req, res) => {
     const code = req.body.code;
     if (!code) {
@@ -75,6 +76,22 @@ app.post('/summarizeText', async (req, res) => {
         res.status(500).send('Failed to summarize text.');
     }
 });
+
+app.post('/AIQuiz', async (req, res) => {
+    const text = req.body.text;
+    if (!text) {
+        res.status(400).send("Text is required.");
+        return;
+    }
+    try {
+        const generatedQuiz = await AIQuiz(text); // Your function to call OpenAI
+        res.json({ generatedQuiz });
+    } catch (error) {
+        console.error('Error generating quiz:', error);
+        res.status(500).send('Failed to summarize text.');
+    }
+});
+
 
 
 
@@ -216,7 +233,7 @@ async function summarizeText(text, temperature = 0.5) {
             }
         ],
         temperature,
-        max_tokens: 512  // Adjust max_tokens if necessary based on the expected length of the summary
+        max_tokens: 1500  // Adjust max_tokens if necessary based on the expected length of the summary
     };
 
     try {
@@ -233,10 +250,42 @@ async function summarizeText(text, temperature = 0.5) {
     }
 }
 
+async function AIQuiz(text, temperature = 0.5) {
+    const headers = {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+    };
 
+    // Include a system message as a prompt to guide the AI on how to process the text
+    const data = {
+        model: 'gpt-3.5-turbo',  // Ensure this is the correct chat model identifier
+        messages: [
+            {
+                role: "system",
+                content: "Generate a 10-question multiple-choice quiz based on the provided text. Each question should have four answer options. Clearly format each question with a number followed by a period and end with a question mark. Mark the correct answer by appending '**' befor and after the correct option. Ensure that each question and its answers are on new lines, and separate each question with a blank line for clarity:"
+            },
+            {
+                role: "user",
+                content: text
+            }
+        ],
+        temperature,
+        max_tokens: 3000  // Adjust max_tokens if necessary based on the expected length of the summary
+    };
 
-
-
+    try {
+        const response = await axios.post(OPENAI_API_URL, data, { headers });
+        if (response.data && response.data.choices && response.data.choices.length > 0) {
+            const generatedQuiz = response.data.choices[0].message.content.trim();
+            return generatedQuiz; // Returns only the summarized text
+        } else {
+            throw new Error('No valid response from OpenAI');
+        }
+    } catch (error) {
+        console.error("API Error:", error.response ? JSON.stringify(error.response.data) : error.message);
+        throw new Error('Failed to fetch data from the OpenAI API.');
+    }
+}
 
 // Start the server
 app.listen(port, () => {

@@ -23,6 +23,11 @@ chrome.runtime.onInstalled.addListener(() => {
             title: "Summarize to a Single Paragraph",
             contexts: ["selection"]
         });
+        chrome.contextMenus.create({
+            id: "AIQuiz",
+            title: "AI Quiz of a paragraph",
+            contexts: ["selection"]
+        });
     });
 });
 
@@ -32,13 +37,18 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         try {
             if (info.menuItemId === "summarizeText") {
                 const summary = await summarizeText(info.selectionText);
-                sendTextToTab(tab.id, summary);
+                sendTextToTab(tab.id, summary,'Summery');
             } else if (info.menuItemId === "improveEnglish" || info.menuItemId === "improveEnglishCreative") {
                 const temperature = info.menuItemId === "improveEnglishCreative" ? 0.5 : 0.2;
                 await improveTextUsingAPI(info.selectionText, tab.id, temperature);
             } else if (info.menuItemId === "addComments") {
                 await addCommentsToCode(info.selectionText, tab.id);
+            }else if (info.menuItemId === "AIQuiz") {
+                const quiz = await AIQuizGenerator(info.selectionText, tab.id);
+                displayQuiz(tab.id, quiz, 'Quiz');
+
             }
+            
         } catch (error) {
             console.error('Error processing request:', error);
             sendErrorToTab(tab.id, "Failed to process request. Please try again later.");
@@ -109,10 +119,72 @@ async function summarizeText(text) {
         const data = await response.json();
         return data.summarizedText; // Ensure you are returning the correct field from the response
     } catch (error) {
-        console.error('Error summarizing text:', error);
+        sendErrorToTab(tabId, 'Failed to summeraize text.');
         return null;
     }
 }
+
+
+
+async function AIQuizGenerator(text) {
+    console.log("Sending request to server to summarize text.");
+    const endpoint = 'http://localhost:3000/AIQuiz'; 
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text })
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to summarize text. Server responded with status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data.generatedQuiz; // Ensure you are returning the correct field from the response
+    } catch (error) {
+        sendErrorToTab(tabId, 'Failed to generat quiz.');
+        return null;
+    }
+}
+
+function formatQuizText(quizText) {
+    // Split the text into individual questions based on blank lines
+    const questions = quizText.split(/\n\s*\n/);
+    let formattedQuiz = [];
+
+    questions.forEach(question => {
+        if (question.trim().length > 0) {
+            // Split each question into lines for processing
+            const lines = question.split('\n');
+            formattedQuiz.push('<b>' + lines[0] + '</b><br>');  // Bold the question line
+            
+            lines.slice(1).forEach(line => {
+                // Check if the line contains the correct answer marked by asterisks
+                if (line.includes('**')) {
+                    // Remove asterisks and format the correct answer in green
+                    line = line.replace(/\*\*/g, '');  // Remove all asterisks
+                    formattedQuiz.push('<span style="color: green; font-weight: bold;">' + line + '</span><br>');
+                } else {
+                    formattedQuiz.push(line + '<br>');
+                }
+            });
+
+            formattedQuiz.push('<hr>');  // Add a horizontal line for separation
+        }
+    });
+
+    return formattedQuiz.join('');
+}
+
+// Function to display the formatted quiz text
+function displayQuiz(tabId, quizText) {
+    const formattedQuizText = formatQuizText(quizText);
+    chrome.scripting.executeScript({
+        target: { tabId },
+        function: displayText,
+        args: ['Quiz', formattedQuizText] // Using the modified displayText function
+    });
+}
+
 
 
 function sendErrorToTab(tabId, message) {
@@ -129,76 +201,81 @@ function sendErrorToTab(tabId, message) {
     }
 }
 
-function sendTextToTab(tabId, text) {
+function sendTextToTab(tabId, text,title) {
     chrome.scripting.executeScript({
         target: { tabId: tabId },
         function: displayText,
-        args: ['summery', text]
+        args: [title, text]
     });
+}
 
-    function displayText(title, text) {
-        // Create a new <div> element to display the title, text, and cancel button
-        const div = document.createElement('div');
-        div.style.position = 'fixed';
-        div.style.top = '50%';
-        div.style.left = '50%';
-        div.style.transform = 'translate(-50%, -50%)';
-        div.style.backgroundColor = '#f8f9fa'; // Light gray background
-        div.style.padding = '20px';
-        div.style.borderRadius = '8px'; // Rounded corners
-        div.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)'; // Shadow effect
-        div.style.zIndex = '9999'; // Ensure it's on top
+function displayText(title, text) {
+    // Create a new <div> element to display the title, text, and cancel button
+    const div = document.createElement('div');
+    div.style.position = 'fixed';
+    div.style.top = '10%';
+    div.style.left = '50%';
+    div.style.transform = 'translateX(-50%)';
+    div.style.width = '80%';
+    div.style.maxHeight = '80%';
+    div.style.overflowY = 'auto'; // Enable vertical scrolling
+    div.style.backgroundColor = '#f8f9fa'; // Light gray background
+    div.style.padding = '20px';
+    div.style.borderRadius = '8px'; // Rounded corners
+    div.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)'; // Shadow effect
+    div.style.zIndex = '9999'; // Ensure it's on top
 
-        // Create a <h2> element for the title
-        const titleElement = document.createElement('h2');
-        titleElement.textContent = title;
-        titleElement.style.fontSize = '20px'; // Larger font size for the title
-        titleElement.style.color = '#333'; // Darker text color
-        titleElement.style.marginBottom = '10px'; // Spacing between title and text
-        // Append the <h2> element to the <div>
-        div.appendChild(titleElement);
+    // Create a <h2> element for the title
+    const titleElement = document.createElement('h2');
+    titleElement.textContent = title;
+    titleElement.style.fontSize = '20px'; // Larger font size for the title
+    titleElement.style.color = '#333'; // Darker text color
+    titleElement.style.marginBottom = '10px'; // Spacing between title and text
+    div.appendChild(titleElement); // Append the <h2> element to the <div>
 
-        // Create a <p> element to display the text
-        const paragraph = document.createElement('p');
-        paragraph.textContent = text;
-        paragraph.style.fontSize = '16px'; // Font size for the text
-        paragraph.style.color = '#666'; // Slightly darker text color
-        paragraph.style.marginBottom = '20px'; // Spacing between text and button
-        // Append the <p> element to the <div>
-        div.appendChild(paragraph);
+    // Create a container for the text
+    const textContainer = document.createElement('div');
+    textContainer.style.maxHeight = 'calc(100% - 100px)'; // Allocate space for title and button
+    textContainer.style.overflowY = 'auto'; // Enable vertical scrolling within the text container
 
-        // Create a <button> element for the cancel button
-        const cancelButton = document.createElement('button');
-        cancelButton.textContent = 'Cancel';
-        cancelButton.style.backgroundColor = '#dc3545'; // Red background color
-        cancelButton.style.color = '#fff'; // White text color
-        cancelButton.style.border = 'none'; // No border
-        cancelButton.style.padding = '10px 20px'; // Padding
-        cancelButton.style.borderRadius = '4px'; // Rounded corners
-        cancelButton.style.cursor = 'pointer'; // Pointer cursor
-        cancelButton.style.transition = 'background-color 0.3s ease'; // Smooth hover effect
-        cancelButton.style.fontWeight = 'bold'; // Bold text
-        cancelButton.style.fontSize = '14px'; // Smaller font size
-        cancelButton.style.outline = 'none'; // Remove focus outline
-        cancelButton.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'; // Shadow effect
-        cancelButton.style.margin = '0 auto'; // Center the button
-        // Hover effect
-        cancelButton.addEventListener('mouseenter', () => {
-            cancelButton.style.backgroundColor = '#c82333'; // Darker red on hover
-        });
-        cancelButton.addEventListener('mouseleave', () => {
-            cancelButton.style.backgroundColor = '#dc3545'; // Original red on hover out
-        });
-        // Click event listener to remove the <div> element when cancel button is clicked
-        cancelButton.onclick = function() {
-            div.remove();
-        };
-        // Append the cancel button to the <div>
-        div.appendChild(cancelButton);
+    // Create a <div> element for the text, using innerHTML to interpret HTML if present
+    const content = document.createElement('div');
+    content.innerHTML = text; // Set content as HTML to allow HTML formatting
+    content.style.fontSize = '16px'; // Font size for the text
+    content.style.color = '#666'; // Slightly darker text color
+    textContainer.appendChild(content); // Append the content <div> to the text container
+    div.appendChild(textContainer); // Append the text container to the main <div>
 
-        // Append the <div> to the body
-        document.body.appendChild(div);
-    }
+    // Create a <button> element for the cancel button
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Close';
+    cancelButton.style.backgroundColor = '#dc3545'; // Red background color
+    cancelButton.style.color = '#fff'; // White text color
+    cancelButton.style.border = 'none'; // No border
+    cancelButton.style.padding = '10px 20px'; // Padding
+    cancelButton.style.borderRadius = '4px'; // Rounded corners
+    cancelButton.style.cursor = 'pointer'; // Pointer cursor
+    cancelButton.style.transition = 'background-color 0.3s ease'; // Smooth hover effect
+    cancelButton.style.fontWeight = 'bold'; // Bold text
+    cancelButton.style.fontSize = '14px'; // Smaller font size
+    cancelButton.style.outline = 'none'; // Remove focus outline
+    cancelButton.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'; // Shadow effect
+    cancelButton.style.marginTop = '20px'; // Margin top for spacing
+    // Hover effects
+    cancelButton.addEventListener('mouseenter', () => {
+        cancelButton.style.backgroundColor = '#c82333'; // Darker red on hover
+    });
+    cancelButton.addEventListener('mouseleave', () => {
+        cancelButton.style.backgroundColor = '#dc3545'; // Original red on hover out
+    });
+    // Click event listener to remove the <div> element when cancel button is clicked
+    cancelButton.onclick = function() {
+        div.remove();
+    };
+    div.appendChild(cancelButton); // Append the cancel button to the <div>
+
+    // Append the <div> to the body
+    document.body.appendChild(div);
 }
 
 
