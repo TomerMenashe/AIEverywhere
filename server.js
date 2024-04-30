@@ -39,7 +39,7 @@ app.post('/improveEnglishCreative', async (req, res) => {
 
     try {
         const creativeText = await generateCreativeText(text, creativityLevel);
-        res.json({ creativeText });
+        res.json({ improvedText });
     } catch (error) {
         console.error('Failed to generate creative text:', error);
         res.status(500).send('Error in text generation');
@@ -172,7 +172,6 @@ async function generateCreativeText(text, temperature = 0.7) {
         throw new Error('Failed to fetch data from the OpenAI API.');
     }
 }
-
 
 
 

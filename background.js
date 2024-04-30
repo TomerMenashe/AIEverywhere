@@ -37,18 +37,20 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         try {
             if (info.menuItemId === "summarizeText") {
                 const summary = await summarizeText(info.selectionText);
-                sendTextToTab(tab.id, summary,'Summery');
+                sendTextToTab(tab.id, summary, 'Summery');
             } else if (info.menuItemId === "improveEnglish" || info.menuItemId === "improveEnglishCreative") {
                 const temperature = info.menuItemId === "improveEnglishCreative" ? 0.5 : 0.2;
-                await improveTextUsingAPI(info.selectionText, tab.id, temperature);
+                const improvedText = await improveTextUsingAPI(info.selectionText, tab.id, temperature);
+                sendTextToTab(tab.id, improvedText, 'Improved Text', true);
+                //replaceSelectedText(improvedText, tab.id);
             } else if (info.menuItemId === "addComments") {
                 await addCommentsToCode(info.selectionText, tab.id);
-            }else if (info.menuItemId === "AIQuiz") {
+            } else if (info.menuItemId === "AIQuiz") {
                 const quiz = await AIQuizGenerator(info.selectionText, tab.id);
-                displayQuiz(tab.id, quiz, 'Quiz');
+                displayQuiz(tab.id, quiz, 'Quiz',);
 
             }
-            
+
         } catch (error) {
             console.error('Error processing request:', error);
             sendErrorToTab(tab.id, "Failed to process request. Please try again later.");
@@ -72,12 +74,12 @@ async function improveTextUsingAPI(text, tabId, temperature) {
         }
         // Parse the response JSON
         const data = await response.json();
-        // Replace the selected text with the improved text
-        replaceSelectedText(data.improvedText, tabId);
+        return data.improvedText;
     } catch (error) {
         // Handle errors
         console.error('Error improving text:', error);
         sendErrorToTab(tabId, "Failed to improve text. Please try again later.");
+        return null;
     }
 }
 
@@ -106,7 +108,7 @@ async function addCommentsToCode(code, tabId) {
 // Function to summarize text
 async function summarizeText(text) {
     console.log("Sending request to server to summarize text.");
-    const endpoint = 'http://localhost:3000/summarizeText'; 
+    const endpoint = 'http://localhost:3000/summarizeText';
     try {
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -128,7 +130,7 @@ async function summarizeText(text) {
 
 async function AIQuizGenerator(text) {
     console.log("Sending request to server to summarize text.");
-    const endpoint = 'http://localhost:3000/AIQuiz'; 
+    const endpoint = 'http://localhost:3000/AIQuiz';
     try {
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -156,10 +158,10 @@ function formatQuizText(quizText) {
             // Split each question into lines for processing
             const lines = question.split('\n');
             formattedQuiz.push('<b>' + lines[0] + '</b><br>');  // Bold the question line
-            
+
             lines.slice(1).forEach(line => {
                 // Check if the line contains the correct answer marked by asterisks
-                if (line.includes('**')) {
+                if (line.includes('** .  **')) {
                     // Remove asterisks and format the correct answer in green
                     line = line.replace(/\*\*/g, '');  // Remove all asterisks
                     formattedQuiz.push('<span style="color: green; font-weight: bold;">' + line + '</span><br>');
@@ -201,23 +203,24 @@ function sendErrorToTab(tabId, message) {
     }
 }
 
-function sendTextToTab(tabId, text,title) {
+function sendTextToTab(tabId, text, title, showInsertButton = false) {
     chrome.scripting.executeScript({
         target: { tabId: tabId },
         function: displayText,
-        args: [title, text]
+        args: [title, text, showInsertButton, tabId]
     });
 }
 
-function displayText(title, text) {
+function displayText(title, text, showInsertButton, tabId) {
     // Create a new <div> element to display the title, text, and cancel button
+    let scriptExecuted = false;
     const div = document.createElement('div');
     div.style.position = 'fixed';
-    div.style.top = '10%';
-    div.style.left = '50%';
-    div.style.transform = 'translateX(-50%)';
-    div.style.width = '80%';
-    div.style.maxHeight = '80%';
+    div.style.top = '5%';
+    div.style.left = '20%';
+    div.style.transform = 'translateX(-50% , -50%)';
+    div.style.width = '45%';
+    div.style.maxHeight = '60%';
     div.style.overflowY = 'auto'; // Enable vertical scrolling
     div.style.backgroundColor = '#f8f9fa'; // Light gray background
     div.style.padding = '20px';
@@ -246,6 +249,48 @@ function displayText(title, text) {
     textContainer.appendChild(content); // Append the content <div> to the text container
     div.appendChild(textContainer); // Append the text container to the main <div>
 
+    if (showInsertButton) {
+        const insertButton = document.createElement('button');
+        insertButton.textContent = 'Insert';
+        insertButton.style.backgroundColor = '#28a745';
+        insertButton.style.color = '#fff';
+        insertButton.style.border = 'none';
+        insertButton.style.padding = '10px 20px';
+        insertButton.style.borderRadius = '4px';
+        insertButton.style.cursor = 'pointer';
+        insertButton.style.marginTop = '20px';
+        insertButton.style.fontWeight = 'bold';
+        insertButton.style.fontSize = '14px';
+        insertButton.style.outline = 'none';
+        insertButton.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+        insertButton.onclick = function () {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+
+                const div = document.createElement('div');
+                div.style.whiteSpace = 'pre-wrap';
+
+                text.split('\n').forEach(line => {
+                    const paragraph = document.createElement('p');
+                    paragraph.textContent = line;
+                    div.appendChild(paragraph);
+                });
+
+                range.insertNode(div);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            } else {
+                console.log("No selection found"); // Debugging output if no selection
+            };
+            div.remove();
+        };
+
+        div.appendChild(insertButton);
+    }
+
+
     // Create a <button> element for the cancel button
     const cancelButton = document.createElement('button');
     cancelButton.textContent = 'Close';
@@ -269,65 +314,30 @@ function displayText(title, text) {
         cancelButton.style.backgroundColor = '#dc3545'; // Original red on hover out
     });
     // Click event listener to remove the <div> element when cancel button is clicked
-    cancelButton.onclick = function() {
+    cancelButton.onclick = function () {
         div.remove();
     };
     div.appendChild(cancelButton); // Append the cancel button to the <div>
 
     // Append the <div> to the body
     document.body.appendChild(div);
+    return scriptExecuted;
 }
 
 
-
-
-function replaceSelectedText(newText, tabId) {
-    chrome.scripting.executeScript({
-        target: { tabId },
-        function: replaceText,
-        args: [newText]
-    });
-}
-
-
-function replaceText(newText) {
-    const selection = window.getSelection();
-    if (selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        range.deleteContents();
-
-        // Create a container element to insert text
-        const div = document.createElement('div');
-        div.style.whiteSpace = 'pre-wrap'; // Preserves whitespace but wraps text
-
-        // Split text into lines to handle natural breaks
-        newText.split('\n').forEach(line => {
-            const paragraph = document.createElement('p');
-            paragraph.textContent = line;
-            div.appendChild(paragraph);
-        });
-
-        // Insert the formatted text into the document
-        range.insertNode(div);
-
-        // Clear the selection to avoid visual confusion after inserting the text
-        selection.removeAllRanges();
-        selection.addRange(range);
-    }
-}
 
 /**
  * Replaces code within an HTML page in a specified browser tab.
  * @param {string} commentedCode - The new code with comments that will replace the existing code.
  * @param {number} tabId - The ID of the browser tab where the code replacement will occur.
  */
- function replaceCodeInPage(commentedCode, tabId) {
+function replaceCodeInPage(commentedCode, tabId) {
     /**
      * This internal function will be executed in the context of the specified tab.
      * It uses the current selection to find and replace the contents of a code element.
      * @param {string} commentedCode - Code to inject into the code element found in the page.
      */
-    const scriptToExecute = function(commentedCode) {
+    const scriptToExecute = function (commentedCode) {
         // Obtain the current text selection in the window
         const selection = window.getSelection();
         let range;
@@ -361,7 +371,7 @@ function replaceText(newText) {
 
 
 
-    
+
 
 
 
