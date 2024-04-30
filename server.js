@@ -1,30 +1,43 @@
-// Import required modules
+/**
+ * Sets up the necessary modules and middleware for the Express application.
+ */
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 
-// Create express app
+/**
+ * Initializes the Express application and sets the port number.
+ */
 const app = express();
 const port = 3000;
 
-// Set OpenAI API key and endpoint
+/**
+ * Sets the API key and endpoint URL for the OpenAI API.
+ */
 const OPENAI_API_KEY = 'sk-proj-iWgMsC1oo6HlffQ39uAPT3BlbkFJ6eVOZidz9D0aiJ8m92Rc';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
-// Use middleware
+/**
+ * Applies middleware for CORS and JSON body parsing to the application.
+ */
 app.use(cors());
 app.use(bodyParser.json());
 
-// Define endpoint to improve English text
+
+/**
+ * API endpoint to improve English text using the OpenAI API.
+ * @param {object} req - The HTTP request object.
+ * @param {object} res - The HTTP response object.
+ */
 app.post('/improveEnglish', async (req, res) => {
     // Get the text to improve from the request body
     const text = req.body.text;
     try {
-        // Call function to improve English text
         const improvedText = await improveEnglish(text, 0.3);
         // Send the improved text as JSON response
         res.json({ improvedText });
+
     } catch (error) {
         // Handle errors
         console.error("Failed to improve text:", error);
@@ -32,70 +45,109 @@ app.post('/improveEnglish', async (req, res) => {
     }
 });
 
-// Define endpoint to improve English text creatively
+/**
+ * API endpoint to creatively enhance English text using the OpenAI API.
+ * @param {object} req - The HTTP request object.
+ * @param {object} res - The HTTP response object.
+ */
 app.post('/improveEnglishCreative', async (req, res) => {
-    const text = req.body.text; // Original text to enhance
+     // Get the text to improve from the request body
+    const text = req.body.text; 
     const creativityLevel = req.body.creativityLevel || 0.7; // Default to a higher creativity level
 
     try {
         const creativeText = await generateCreativeText(text, creativityLevel);
+        // Send the improved text as JSON response
         res.json({ improvedText });
+
     } catch (error) {
+        // Handle errors
         console.error('Failed to generate creative text:', error);
         res.status(500).send('Error in text generation');
     }
 });
 
+/**
+ * API endpoint to add comments to code using the OpenAI API.
+ * @param {object} req - The HTTP request object.
+ * @param {object} res - The HTTP response object.
+ */
 app.post('/addCommentsToCode', async (req, res) => {
+    // Get the text to improve from the request body
     const code = req.body.code;
     if (!code) {
         res.status(400).send("Code is required.");
         return;
     }
     try {
-        const commentedCode = await generateComments(code); // Your function to call OpenAI
+        const commentedCode = await generateComments(code); 
+        // Send the improved text as JSON response
         res.json({ commentedCode });
+
     } catch (error) {
+        // Handle errors
         console.error('Error adding comments to code:', error);
         res.status(500).send('Failed to add comments to code.');
     }
 });
 
-// Define endpoint to summarize text
+
+/**
+ * API endpoint to summarize text using the OpenAI API.
+ * @param {object} req - The HTTP request object.
+ * @param {object} res - The HTTP response object.
+ */
 app.post('/summarizeText', async (req, res) => {
+     // Get the text to improve from the request body
     const text = req.body.text;
     if (!text) {
         res.status(400).send("Text is required.");
         return;
     }
     try {
-        const summarizedText = await summarizeText(text); // Your function to call OpenAI
+        const summarizedText = await summarizeText(text); 
+        // Send the improved text as JSON response
         res.json({ summarizedText });
+
     } catch (error) {
+        // Handle errors
         console.error('Error summarizing text:', error);
         res.status(500).send('Failed to summarize text.');
     }
 });
 
+
+/**
+ * API endpoint to generate a quiz based on provided text using the OpenAI API.
+ * @param {object} req - The HTTP request object.
+ * @param {object} res - The HTTP response object.
+ */
 app.post('/AIQuiz', async (req, res) => {
+    // Get the text to improve from the request body
     const text = req.body.text;
     if (!text) {
         res.status(400).send("Text is required.");
         return;
     }
     try {
-        const generatedQuiz = await AIQuiz(text); // Your function to call OpenAI
+        const generatedQuiz = await AIQuiz(text); 
+        // Send the improved text as JSON response
         res.json({ generatedQuiz });
+
     } catch (error) {
+        // Handle errors
         console.error('Error generating quiz:', error);
         res.status(500).send('Failed to summarize text.');
     }
 });
 
 
-
-
-
+/**
+ * A function to improve English text by communicating with the OpenAI API.
+ * @param {string} text - The text to be improved.
+ * @param {number} [temperature=0.5] - The creativity level for the text improvement.
+ * @returns {Promise<string>} The improved text.
+ */
 async function improveEnglish(text, temperature = 0.5) {
     const headers = {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -104,7 +156,7 @@ async function improveEnglish(text, temperature = 0.5) {
 
     // Include a system message as a prompt to specify how the text should be processed
     const data = {
-        model: 'gpt-4',  // Ensure this is the correct chat model identifier
+        model: 'gpt-4',  
         messages: [
             {
                 role: "system",
@@ -123,7 +175,7 @@ async function improveEnglish(text, temperature = 0.5) {
         const response = await axios.post(OPENAI_API_URL, data, { headers });
         if (response.data && response.data.choices && response.data.choices.length > 0) {
             const improvedText = response.data.choices[0].message.content.trim();
-            return improvedText; // Returns only the improved sentence
+            return improvedText; 
         } else {
             throw new Error('No valid response from OpenAI');
         }
@@ -135,7 +187,12 @@ async function improveEnglish(text, temperature = 0.5) {
 
 
 
-
+/**
+ * A function to generate creative text by communicating with the OpenAI API.
+ * @param {string} text - The text to enhance creatively.
+ * @param {number} [temperature=0.7] - The creativity level for the text enhancement.
+ * @returns {Promise<string>} The creatively enhanced text.
+ */
 async function generateCreativeText(text, temperature = 0.7) {
     const headers = {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -144,7 +201,7 @@ async function generateCreativeText(text, temperature = 0.7) {
 
     // Include a system message as a prompt to specify how the text should be processed
     const data = {
-        model: 'gpt-4',  // Ensure this is the correct chat model identifier
+        model: 'gpt-4', 
         messages: [
             {
                 role: "system",
@@ -174,7 +231,12 @@ async function generateCreativeText(text, temperature = 0.7) {
 }
 
 
-
+/**
+ * A function to add comments to code by communicating with the OpenAI API.
+ * @param {string} code - The code to be commented.
+ * @param {number} [temperature=0.2] - The level of detail in the comments.
+ * @returns {Promise<string>} The code with added comments.
+ */
 async function generateComments(code, temperature = 0.2) {
     const headers = {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -183,7 +245,7 @@ async function generateComments(code, temperature = 0.2) {
 
     // Include a system message as a prompt to guide the AI on how to process the code
     const data = {
-        model: 'gpt-4',  // Ensure this is the correct chat model identifier
+        model: 'gpt-4',  
         messages: [
             {
                 role: "system",
@@ -195,14 +257,14 @@ async function generateComments(code, temperature = 0.2) {
             }
         ],
         temperature,
-        max_tokens: 1000  // Adjust max_tokens if necessary based on the expected length of comments
+        max_tokens: 1000  
     };
 
     try {
         const response = await axios.post(OPENAI_API_URL, data, { headers });
         if (response.data && response.data.choices && response.data.choices.length > 0) {
             const commentedCode = response.data.choices[0].message.content.trim();
-            return commentedCode; // Returns only the commented code
+            return commentedCode; 
         } else {
             throw new Error('No valid response from OpenAI');
         }
@@ -212,6 +274,13 @@ async function generateComments(code, temperature = 0.2) {
     }
 }
 
+
+/**
+ * A function to summarize text by communicating with the OpenAI API.
+ * @param {string} text - The text to be summarized.
+ * @param {number} [temperature=0.5] - The precision of the summary.
+ * @returns {Promise<string>} The summarized text.
+ */
 async function summarizeText(text, temperature = 0.5) {
     const headers = {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -220,7 +289,7 @@ async function summarizeText(text, temperature = 0.5) {
 
     // Include a system message as a prompt to guide the AI on how to process the text
     const data = {
-        model: 'gpt-3.5-turbo',  // Ensure this is the correct chat model identifier
+        model: 'gpt-3.5-turbo',  
         messages: [
             {
                 role: "system",
@@ -232,14 +301,14 @@ async function summarizeText(text, temperature = 0.5) {
             }
         ],
         temperature,
-        max_tokens: 1500  // Adjust max_tokens if necessary based on the expected length of the summary
+        max_tokens: 1500  
     };
 
     try {
         const response = await axios.post(OPENAI_API_URL, data, { headers });
         if (response.data && response.data.choices && response.data.choices.length > 0) {
             const summarizedText = response.data.choices[0].message.content.trim();
-            return summarizedText; // Returns only the summarized text
+            return summarizedText; 
         } else {
             throw new Error('No valid response from OpenAI');
         }
@@ -249,6 +318,13 @@ async function summarizeText(text, temperature = 0.5) {
     }
 }
 
+
+/**
+ * A function to generate a quiz from text by communicating with the OpenAI API.
+ * @param {string} text - The text to create a quiz from.
+ * @param {number} [temperature=0.5] - The creativity level for the quiz generation.
+ * @returns {Promise<string>} The generated quiz.
+ */
 async function AIQuiz(text, temperature = 0.5) {
     const headers = {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -257,7 +333,7 @@ async function AIQuiz(text, temperature = 0.5) {
 
     // Include a system message as a prompt to guide the AI on how to process the text
     const data = {
-        model: 'gpt-3.5-turbo',  // Ensure this is the correct chat model identifier
+        model: 'gpt-3.5-turbo', 
         messages: [
             {
                 role: "system",
@@ -269,14 +345,14 @@ async function AIQuiz(text, temperature = 0.5) {
             }
         ],
         temperature,
-        max_tokens: 3000  // Adjust max_tokens if necessary based on the expected length of the summary
+        max_tokens: 3000  
     };
 
     try {
         const response = await axios.post(OPENAI_API_URL, data, { headers });
         if (response.data && response.data.choices && response.data.choices.length > 0) {
             const generatedQuiz = response.data.choices[0].message.content.trim();
-            return generatedQuiz; // Returns only the summarized text
+            return generatedQuiz; 
         } else {
             throw new Error('No valid response from OpenAI');
         }
