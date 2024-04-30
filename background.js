@@ -1,37 +1,46 @@
-// Add event listener to create context menus on extension installation
 chrome.runtime.onInstalled.addListener(() => {
     // Remove all existing context menus
-    chrome.contextMenus.removeAll(() => {
-        // Create context menu items for each functionality
-        chrome.contextMenus.create({
-            id: "improveEnglish",
-            title: "Improve English",
-            contexts: ["selection"]
-        });
-        chrome.contextMenus.create({
-            id: "improveEnglishCreative",
-            title: "Improve English - Creative",
-            contexts: ["selection"]
-        });
-        chrome.contextMenus.create({
-            id: "addComments",
-            title: "Add Comments to Code",
-            contexts: ["selection"]
-        });
-        chrome.contextMenus.create({
-            id: "summarizeText",
-            title: "Summarize to a Single Paragraph",
-            contexts: ["selection"]
-        });
-        chrome.contextMenus.create({
-            id: "AIQuiz",
-            title: "AI Quiz of a paragraph",
-            contexts: ["selection"]
-        });
+    chrome.contextMenus.removeAll(function() {
+        // Check for errors during removal
+        if (chrome.runtime.lastError) {
+            console.error('Error removing context menus:', chrome.runtime.lastError);
+        } else {
+            // After successful removal, create new context menus
+            chrome.contextMenus.create({
+                id: "improveEnglish",
+                title: "Improve English",
+                contexts: ["selection"]
+            });
+            chrome.contextMenus.create({
+                id: "improveEnglishCreative",
+                title: "Improve English - Creative",
+                contexts: ["selection"]
+            });
+            chrome.contextMenus.create({
+                id: "addComments",
+                title: "Add Comments to Code",
+                contexts: ["selection"]
+            });
+            chrome.contextMenus.create({
+                id: "summarizeText",
+                title: "Summarize to a Single Paragraph",
+                contexts: ["selection"]
+            });
+            chrome.contextMenus.create({
+                id: "AIQuiz",
+                title: "AI Quiz of a paragraph",
+                contexts: ["selection"]
+            });
+        }
     });
 });
 
-// Add event listener for context menu clicks
+
+/**
+ * Handles clicks on context menu items.
+ * @param {object} info - Information about the item clicked.
+ * @param {object} tab - The tab where the click occurred.
+ */
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.selectionText) {
         try {
@@ -42,7 +51,6 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
                 const temperature = info.menuItemId === "improveEnglishCreative" ? 0.5 : 0.2;
                 const improvedText = await improveTextUsingAPI(info.selectionText, tab.id, temperature);
                 sendTextToTab(tab.id, improvedText, 'Improved Text', true);
-                //replaceSelectedText(improvedText, tab.id);
             } else if (info.menuItemId === "addComments") {
                 await addCommentsToCode(info.selectionText, tab.id);
             } else if (info.menuItemId === "AIQuiz") {
@@ -58,7 +66,13 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     }
 });
 
-// Function to improve text using OpenAI API
+/**
+ * Improves English text by utilizing an external API based on a given "temperature" setting.
+ * @param {string} text - The text to improve.
+ * @param {number} tabId - The ID of the browser tab to interact with.
+ * @param {number} temperature - The creativity level for the text improvement.
+ * @returns {Promise<string>} The improved text.
+ */
 async function improveTextUsingAPI(text, tabId, temperature) {
     // Endpoint for the OpenAI API
     const endpoint = `http://localhost:3000/${temperature > 0.5 ? 'improveEnglishCreative' : 'improveEnglish'}`;
@@ -75,6 +89,7 @@ async function improveTextUsingAPI(text, tabId, temperature) {
         // Parse the response JSON
         const data = await response.json();
         return data.improvedText;
+
     } catch (error) {
         // Handle errors
         console.error('Error improving text:', error);
@@ -83,33 +98,47 @@ async function improveTextUsingAPI(text, tabId, temperature) {
     }
 }
 
+
+/**
+ * Adds comments to the code by sending it to a server.
+ * @param {string} code - The source code to comment.
+ * @param {number} tabId - The ID of the browser tab where the code is displayed.
+ */
 async function addCommentsToCode(code, tabId) {
     const endpoint = `http://localhost:3000/addCommentsToCode`; // Correct endpoint on your server
     try {
+        // Make a POST request to the OpenAI API
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code: code }) // Send only the code; the server decides the prompt
         });
-
+        
         if (!response.ok) {
             throw new Error(`Failed to add comments to code. Server responded with status: ${response.status}`);
         }
-
+         // Parse the response JSON
         const data = await response.json();
-        replaceCodeInPage(data.commentedCode, tabId); // Ensure tabId is passed correctly here
+        replaceCodeInPage(data.commentedCode, tabId);
+        
     } catch (error) {
+        // Handle errors
         console.error('Error adding comments to code:', error);
         sendErrorToTab(tabId, 'Failed to add comments to code.');
     }
 }
 
 
-// Function to summarize text
+/**
+ * Summarizes the selected text by sending it to a server.
+ * @param {string} text - The text to be summarized.
+ * @returns {Promise<string>} The summarized text.
+ */
 async function summarizeText(text) {
     console.log("Sending request to server to summarize text.");
     const endpoint = 'http://localhost:3000/summarizeText';
     try {
+        // Make a POST request to the OpenAI API
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -118,20 +147,28 @@ async function summarizeText(text) {
         if (!response.ok) {
             throw new Error(`Failed to summarize text. Server responded with status: ${response.status}`);
         }
+        // Parse the response JSON
         const data = await response.json();
-        return data.summarizedText; // Ensure you are returning the correct field from the response
+        return data.summarizedText; 
+
     } catch (error) {
+        // Handle errors
         sendErrorToTab(tabId, 'Failed to summeraize text.');
         return null;
     }
 }
 
 
-
+/**
+ * Generates a quiz based on the provided text by sending it to a server.
+ * @param {string} text - The text from which the quiz is generated.
+ * @returns {Promise<string>} The generated quiz.
+ */
 async function AIQuizGenerator(text) {
     console.log("Sending request to server to summarize text.");
     const endpoint = 'http://localhost:3000/AIQuiz';
     try {
+        // Make a POST request to the OpenAI API
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -140,15 +177,27 @@ async function AIQuizGenerator(text) {
         if (!response.ok) {
             throw new Error(`Failed to summarize text. Server responded with status: ${response.status}`);
         }
+        // Parse the response JSON
         const data = await response.json();
-        return data.generatedQuiz; // Ensure you are returning the correct field from the response
+        return data.generatedQuiz;
+
     } catch (error) {
+        // Handle errors
         sendErrorToTab(tabId, 'Failed to generat quiz.');
         return null;
     }
 }
 
-function formatQuizText(quizText) {
+
+/**
+ * Formats a raw quiz text into a structured HTML format suitable for display.
+ * The function processes quiz content, where questions are separated by blank lines,
+ * and correct answers are highlighted in green. Each question is made bold.
+ * 
+ * @param {string} quizText - The raw text of the quiz, where questions are separated by blank lines.
+ * @returns {string} The HTML-formatted string of the quiz, ready for display.
+ */
+ function formatQuizText(quizText) {
     // Split the text into individual questions based on blank lines
     const questions = quizText.split(/\n\s*\n/);
     let formattedQuiz = [];
@@ -161,23 +210,29 @@ function formatQuizText(quizText) {
 
             lines.slice(1).forEach(line => {
                 // Check if the line contains the correct answer marked by asterisks
-                if (line.includes('** .  **')) {
-                    // Remove asterisks and format the correct answer in green
-                    line = line.replace(/\*\*/g, '');  // Remove all asterisks
-                    formattedQuiz.push('<span style="color: green; font-weight: bold;">' + line + '</span><br>');
-                } else {
-                    formattedQuiz.push(line + '<br>');
+                if (line.includes('**')) {
+                    // Format the correct answer in green and remove the asterisks
+                    line = line.replace(/\*\*(.*?)\*\*/g, '<span style="color: green; font-weight: bold;">$1</span>');
                 }
+                formattedQuiz.push(line + '<br>');
             });
 
-            formattedQuiz.push('<hr>');  // Add a horizontal line for separation
+            formattedQuiz.push('<hr>'); // Add a horizontal line for separation
         }
     });
 
     return formattedQuiz.join('');
 }
 
-// Function to display the formatted quiz text
+
+
+
+
+/**
+ * Displays the formatted quiz text in a specific browser tab.
+ * @param {number} tabId - The ID of the browser tab where the quiz will be displayed.
+ * @param {string} quizText - The raw quiz text to be formatted and displayed.
+ */
 function displayQuiz(tabId, quizText) {
     const formattedQuizText = formatQuizText(quizText);
     chrome.scripting.executeScript({
@@ -188,21 +243,33 @@ function displayQuiz(tabId, quizText) {
 }
 
 
-
+/**
+ * Sends an error message to a specified tab.
+ * @param {number} tabId - The ID of the browser tab where the error will be shown.
+ * @param {string} message - The error message to display.
+ */
 function sendErrorToTab(tabId, message) {
     // Use the Chrome scripting API to run a script in the specified tab
     chrome.scripting.executeScript({
         target: { tabId: tabId },
         function: showAlert,
-        args: [message]  // Pass the error message to the function running in the tab
+        args: [message] 
     });
 
-    // This function will be injected and executed in the context of the specified tab
+    // This function will show the poping alert
     function showAlert(message) {
-        alert("Error: " + message);  // Display an alert with the error message
+        alert("Error: " + message);  
     }
 }
 
+
+/**
+ * Sends text to a specified tab, optionally showing an "Insert" button.
+ * @param {number} tabId - The ID of the browser tab where the text will be sent.
+ * @param {string} text - The text to send.
+ * @param {string} title - The title to be displayed above the text.
+ * @param {boolean} [showInsertButton=false] - Whether to show an "Insert" button that allows the text to be inserted into the page.
+ */
 function sendTextToTab(tabId, text, title, showInsertButton = false) {
     chrome.scripting.executeScript({
         target: { tabId: tabId },
@@ -211,6 +278,14 @@ function sendTextToTab(tabId, text, title, showInsertButton = false) {
     });
 }
 
+
+/**
+ * Displays text in a modal-like div over the webpage in the specified tab.
+ * @param {string} title - The title for the displayed content.
+ * @param {string} text - The text or HTML content to display.
+ * @param {boolean} showInsertButton - Indicates whether an 'Insert' button should be shown to allow the user to insert text into the page.
+ * @param {number} tabId - The browser tab ID where the content will be displayed.
+ */
 function displayText(title, text, showInsertButton, tabId) {
     // Create a new <div> element to display the title, text, and cancel button
     let scriptExecuted = false;
@@ -221,34 +296,35 @@ function displayText(title, text, showInsertButton, tabId) {
     div.style.transform = 'translateX(-50% , -50%)';
     div.style.width = '45%';
     div.style.maxHeight = '60%';
-    div.style.overflowY = 'auto'; // Enable vertical scrolling
-    div.style.backgroundColor = '#f8f9fa'; // Light gray background
+    div.style.overflowY = 'auto'; 
+    div.style.backgroundColor = '#f8f9fa'; 
     div.style.padding = '20px';
-    div.style.borderRadius = '8px'; // Rounded corners
-    div.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)'; // Shadow effect
-    div.style.zIndex = '9999'; // Ensure it's on top
+    div.style.borderRadius = '8px'; 
+    div.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)'; 
+    div.style.zIndex = '9999'; 
 
     // Create a <h2> element for the title
     const titleElement = document.createElement('h2');
     titleElement.textContent = title;
-    titleElement.style.fontSize = '20px'; // Larger font size for the title
-    titleElement.style.color = '#333'; // Darker text color
-    titleElement.style.marginBottom = '10px'; // Spacing between title and text
-    div.appendChild(titleElement); // Append the <h2> element to the <div>
+    titleElement.style.fontSize = '20px'; 
+    titleElement.style.color = '#333'; 
+    titleElement.style.marginBottom = '10px'; 
+    div.appendChild(titleElement); 
 
     // Create a container for the text
     const textContainer = document.createElement('div');
-    textContainer.style.maxHeight = 'calc(100% - 100px)'; // Allocate space for title and button
-    textContainer.style.overflowY = 'auto'; // Enable vertical scrolling within the text container
+    textContainer.style.maxHeight = 'calc(100% - 100px)'; 
+    textContainer.style.overflowY = 'auto'; 
 
     // Create a <div> element for the text, using innerHTML to interpret HTML if present
     const content = document.createElement('div');
-    content.innerHTML = text; // Set content as HTML to allow HTML formatting
-    content.style.fontSize = '16px'; // Font size for the text
-    content.style.color = '#666'; // Slightly darker text color
-    textContainer.appendChild(content); // Append the content <div> to the text container
-    div.appendChild(textContainer); // Append the text container to the main <div>
+    content.innerHTML = text; 
+    content.style.fontSize = '16px'; 
+    content.style.color = '#666'; 
+    textContainer.appendChild(content); 
+    div.appendChild(textContainer); 
 
+     // Create a <button> element for the insert button & insert logic
     if (showInsertButton) {
         const insertButton = document.createElement('button');
         insertButton.textContent = 'Insert';
@@ -263,6 +339,7 @@ function displayText(title, text, showInsertButton, tabId) {
         insertButton.style.fontSize = '14px';
         insertButton.style.outline = 'none';
         insertButton.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+        // Click event listener to insert the <div> element when insert button is clicked
         insertButton.onclick = function () {
             const selection = window.getSelection();
             if (selection.rangeCount > 0) {
@@ -282,7 +359,7 @@ function displayText(title, text, showInsertButton, tabId) {
                 selection.removeAllRanges();
                 selection.addRange(range);
             } else {
-                console.log("No selection found"); // Debugging output if no selection
+                console.log("No selection found"); 
             };
             div.remove();
         };
@@ -294,25 +371,27 @@ function displayText(title, text, showInsertButton, tabId) {
     // Create a <button> element for the cancel button
     const cancelButton = document.createElement('button');
     cancelButton.textContent = 'Close';
-    cancelButton.style.backgroundColor = '#dc3545'; // Red background color
-    cancelButton.style.color = '#fff'; // White text color
-    cancelButton.style.border = 'none'; // No border
-    cancelButton.style.padding = '10px 20px'; // Padding
-    cancelButton.style.borderRadius = '4px'; // Rounded corners
-    cancelButton.style.cursor = 'pointer'; // Pointer cursor
-    cancelButton.style.transition = 'background-color 0.3s ease'; // Smooth hover effect
-    cancelButton.style.fontWeight = 'bold'; // Bold text
-    cancelButton.style.fontSize = '14px'; // Smaller font size
-    cancelButton.style.outline = 'none'; // Remove focus outline
-    cancelButton.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'; // Shadow effect
-    cancelButton.style.marginTop = '20px'; // Margin top for spacing
+    cancelButton.style.backgroundColor = '#dc3545'; 
+    cancelButton.style.color = '#fff'; 
+    cancelButton.style.border = 'none'; 
+    cancelButton.style.padding = '10px 20px'; 
+    cancelButton.style.borderRadius = '4px'; 
+    cancelButton.style.cursor = 'pointer';
+    cancelButton.style.transition = 'background-color 0.3s ease'; 
+    cancelButton.style.fontWeight = 'bold'; 
+    cancelButton.style.fontSize = '14px';
+    cancelButton.style.outline = 'none'; 
+    cancelButton.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'; 
+    cancelButton.style.marginTop = '20px'; 
+
     // Hover effects
     cancelButton.addEventListener('mouseenter', () => {
-        cancelButton.style.backgroundColor = '#c82333'; // Darker red on hover
+        cancelButton.style.backgroundColor = '#c82333'; 
     });
     cancelButton.addEventListener('mouseleave', () => {
-        cancelButton.style.backgroundColor = '#dc3545'; // Original red on hover out
+        cancelButton.style.backgroundColor = '#dc3545'; 
     });
+
     // Click event listener to remove the <div> element when cancel button is clicked
     cancelButton.onclick = function () {
         div.remove();
@@ -367,17 +446,3 @@ function replaceCodeInPage(commentedCode, tabId) {
     },
     );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -337,7 +337,7 @@ async function AIQuiz(text, temperature = 0.5) {
         messages: [
             {
                 role: "system",
-                content: "Generate a 10-question multiple-choice quiz based on the provided text. Each question should have four answer options. Clearly format each question with a number followed by a period and end with a question mark. Mark the correct answer by appending '**' befor and after the correct option and write it only once. Ensure that each question and its answers are on new lines, and separate each question with a blank line for clarity:"
+                content: "Generate a 10-question multiple-choice quiz based on the provided text. Each question should have four answer options. Clearly format each question with a number followed by a period and end with a question mark. Highlight the correct answer by surrounding it with double asterisks '**' before and after. Ensure that the correct answer appears only once and is formatted correctly. Each question and its answers should be on new lines, and separate each question with a blank line for clarity. Format the correct answer so that it can be directly used in HTML to be highlighted in green without further processing.:"
             },
             {
                 role: "user",
