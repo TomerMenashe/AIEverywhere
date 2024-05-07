@@ -15,7 +15,7 @@ const port = 3000;
 /**
  * Sets the API key and endpoint URL for the OpenAI API.
  */
-const OPENAI_API_KEY = 'sk-proj-iWgMsC1oo6HlffQ39uAPT3BlbkFJ6eVOZidz9D0aiJ8m92Rc';
+ const OPENAI_API_KEY = 'sk-proj-Oq5ZIP0wzFpPXlHevrejT3BlbkFJbPu7j3nbNBdycdb6S74k';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 /**
@@ -337,7 +337,7 @@ async function AIQuiz(text, temperature = 0.5) {
         messages: [
             {
                 role: "system",
-                content: "Generate a 10-question multiple-choice quiz based on the provided text. Each question should have four answer options. Clearly format each question with a number followed by a period and end with a question mark. Highlight the correct answer by surrounding it with double asterisks '**' before and after. Ensure that the correct answer appears only once and is formatted correctly. Each question and its answers should be on new lines, and separate each question with a blank line for clarity. Format the correct answer so that it can be directly used in HTML to be highlighted in green without further processing.:"
+                content: "Generate a 10-question multiple-choice quiz based on the provided text. Each question should have four answer options. Clearly format each question with a number followed by a period and end with a question mark. Surround the correct answer with double asterisks '**' before and after. Ensure that each question and its answers are on new lines, and separate each question with a blank line for clarity.:"
             },
             {
                 role: "user",
