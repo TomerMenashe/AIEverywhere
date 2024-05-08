@@ -15,7 +15,7 @@ const port = 3000;
 /**
  * Sets the API key and endpoint URL for the OpenAI API.
  */
- const OPENAI_API_KEY = 'sk-proj-Oq5ZIP0wzFpPXlHevrejT3BlbkFJbPu7j3nbNBdycdb6S74k';
+ const OPENAI_API_KEY = process.env.API_KEY;
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 /**
@@ -245,11 +245,11 @@ async function generateComments(code, temperature = 0.2) {
 
     // Include a system message as a prompt to guide the AI on how to process the code
     const data = {
-        model: 'gpt-4',  
+        model: 'gpt-3.5-turbo',  
         messages: [
             {
                 role: "system",
-                content: "Given code , please add professional comments as a senior developer would. Focus on explaining complex logic, key decisions, and critical sections only. Ensure the comments are clear, concise, and informative, aiding any new developer in quickly understanding the code’s purpose and operation. The comments should adhere to best practices in coding and documentation:"
+                content: "Given code , please add professional comments as a senior developer would. Focus on explaining complex logic, key decisions, and critical sections only. Ensure the comments are clear, concise, and informative, aiding any new developer in quickly understanding the code’s purpose and operation. The comments should adhere to best practices in coding and documentation, the output code should be integrated proffesionaly:"
             },
             {
                 role: "user",

@@ -52,7 +52,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
                 const improvedText = await improveTextUsingAPI(info.selectionText, tab.id, temperature);
                 sendTextToTab(tab.id, improvedText, 'Improved Text', true);
             } else if (info.menuItemId === "addComments") {
-                await addCommentsToCode(info.selectionText, tab.id);
+                const comentedCode = await addCommentsToCode(info.selectionText, tab.id);
+                sendTextToTab(tab.id, comentedCode, 'Comented Code', true);
             } else if (info.menuItemId === "AIQuiz") {
                 const quiz = await AIQuizGenerator(info.selectionText, tab.id);
                 displayQuiz(tab.id, quiz, 'Quiz',);
@@ -119,7 +120,7 @@ async function addCommentsToCode(code, tabId) {
         }
          // Parse the response JSON
         const data = await response.json();
-        replaceCodeInPage(data.commentedCode, tabId);
+            return data.commentedCode
         
     } catch (error) {
         // Handle errors
