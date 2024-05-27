@@ -32,7 +32,7 @@ Welcome to the AIEverywhere Chrome Extension project! This extension enhances yo
 <img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/aiquiz.png" alt="AI Quiz" width="400"/>
 
 ### After Inserting Code
-<img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/afterinsertingcode.png" alt="After Inserting Code" width="400"/>
+<img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/afterinertingcode.png" alt="After Inserting Code" width="400"/>
 
 
 ## Getting Started
