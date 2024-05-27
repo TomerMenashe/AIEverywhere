@@ -16,14 +16,26 @@ Welcome to the AIEverywhere Chrome Extension project! This extension enhances yo
 
 ## Screenshots
 
-### HighlightTextInYellow
-![HighlightTextInYellow](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/HighlightTextInYellow.png)
+### Menu of the Extension
+![Menu of the Extension](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/menu.png)
 
-### AIEverywhere Context Menu
-![AIEverywhere Context Menu](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/ContextMenu.png)
+### Improve English
+![Improve English](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/improve.png)
 
-### Quiz Example
-![Quiz Example](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/QuizExample.png)
+### Improve English - Creative
+![Improve English - Creative](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/creative.png)
+
+### Summarize Text
+![Summarize Text](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/sumText.png)
+
+### AI Quiz
+![AI Quiz](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/aiquiz.png)
+
+### Before Inserting Code
+![Before Inserting Code](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/beforeinsertingcode.png)
+
+### After Inserting Code
+![After Inserting Code](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/afterinsertingcode.png)
 
 ## Getting Started
 
