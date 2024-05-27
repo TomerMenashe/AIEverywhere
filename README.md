@@ -17,7 +17,7 @@ Welcome to the AIEverywhere Chrome Extension project! This extension enhances yo
 ## Screenshots
 
 ### Menu of the Extension
-![Menu of the Extension](https://github.com/TomerMenashe/FITA-AIEverywhere/main/menu.png)
+![Menu of the Extension](https://github.com/TomerMenashe/FITA-AIEverywhere/menu.png)
 
 ### Improve English
 ![Improve English](https://github.com/TomerMenashe/AIEverywhere/blob/main/improve.png)
