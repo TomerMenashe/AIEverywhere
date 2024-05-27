@@ -48,59 +48,60 @@ Follow these steps to run the project locally.
    
 2. **Set up the backend**
 
-Navigate to the price-checker-api directory:
-cd price-checker-api
+Navigate to the FITA-AIEverywhere directory:
 
 Install Python dependencies:
-pip install -r requirements.txt
-
-Run the FastAPI server:
-uvicorn main:app --reload
-
-3. **Set up the backend**
-
-Open a new terminal and navigate to the price-comparison-app directory:
-cd price-comparison-app
-
-Install Node.js dependencies:
 npm install
 
-Run the Next.js development server:
-npm run dev
+Run the server:
+npm server.js
 
 4. **Access the Application**
 
-Open your web browser and navigate to http://localhost:3000.
+1.Open your web browser and navigate to chrome://extensions/.
+
+2.Enable Developer Mode
+
+Enable "Developer mode" by toggling the switch at the top right of the Extensions page.
+
+3.Load Unpacked Extension
+
+Click the "Load unpacked" button that appears after enabling Developer mode.
+
+4.Select Extension Directory
+
+A file dialog will open. Navigate to the directory where your extension files are located (e.g., AIEverywhere/extension) and select it.
+
+
+5.Verify Extension Installation
+
+Your extension should now appear in the list of installed extensions. Ensure it is enabled by toggling the switch next to it if necessary.
+
 
 ### Usage
-Enter the product name in the search bar and click "Search".
-View the comparison table with prices from BestBuy, Walmart, and Newegg.
-Click on the product names to be redirected to the respective product pages on each site.
+Select text on any webpage.
+Right-click and choose the desired context menu item:
+"Improve English" - improve the sentence like English teach would.
+"Improve English - Creative" - same as improve english just more creative.
+"Add Comments to Code" - add comments to selected code online.
+"Summarize to a Single Paragraph" - summerarize a text to a single paragraph.
+"AI Quiz" - generate a quiz on a selected paragrap.
 
 
 ## Project Structure
 
 ```plaintext
-price-comparison-page/
+AIEverywhere/
 │
-├── price-checker-api/
-│   ├── main.py
-│   ├── scrapers/
-│   │   ├── bestbuy_scraper.py
-│   │   ├── walmart_scraper.py
-│   │   └── newegg_scraper.py
-│   ├── requirements.txt
-│   └── ...
-│
-├── price-comparison-app/
-│   ├── pages/
-│   │   ├── index.js
-│   │   └── ...
-│   ├── package.json
+├── extension/
+│   ├── background.js
+│   ├── content.js
+│   ├── manifest.json
+│   ├── server.js
+│   ├── styles.css
 │   └── ...
 │
 └── README.md
-```
 
 
 ### Contributing
@@ -116,5 +117,5 @@ Push your changes to your forked repository.
 
 Create a pull request to the main repository.
 
-### Authors
+### Author
 Tomer Menashe
