@@ -49,20 +49,20 @@ Follow these steps to run the project locally.
 Install Python dependencies:
 npm install
 
-- **Run the server:**
+3. **Run the server:**
 npm server.js
 
 4. **Access the Application**
 
-- **Open your web browser and navigate to chrome://extensions/.**
+ - Open your web browser and navigate to chrome://extensions/.**
 
-- **Enable Developer Mode**
+ - Enable Developer Mode**
 
-Enable "Developer mode" by toggling the switch at the top right of the Extensions page.
+ - Enable "Developer mode" by toggling the switch at the top right of the Extensions page.
 
-- **Load Unpacked Extension**
+ - Load Unpacked Extension**
 
-Click the "Load unpacked" button that appears after enabling Developer mode.
+ - Click the "Load unpacked" button that appears after enabling Developer mode.
 
 - **Select Extension Directory**
 
