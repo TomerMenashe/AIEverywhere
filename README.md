@@ -16,17 +16,14 @@ Welcome to the AIEverywhere Chrome Extension project! This extension enhances yo
 
 ## Screenshots
 
-### Before Inserting Code
-<img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/beforeinsertingcode.png" alt="Before Inserting Code" width="400"/>
+### Menu of the Extension
+<img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/menu.png" alt="Menu of the Extension" width="400"/>
 
 ### Improve English
 <img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/improve.png" alt="Improve English" width="400"/>
 
 ### Improve English - Creative
 <img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/creative.png" alt="Improve English - Creative" width="400"/>
-
-### Menu of the Extension
-<img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/menu.png" alt="Menu of the Extension" width="400"/>
 
 ### Summarize Text
 <img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/sumText.png" alt="Summarize Text" width="400"/>
