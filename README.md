@@ -3,11 +3,7 @@
 Welcome to the AIEverywhere Chrome Extension project! This extension enhances your browsing experience by providing multiple AI-powered functionalities through the context menu.
 
 ## Project Overview
-
-This project comprises two main stages:
-
-1. **HighlightTextInYellow**: A simple extension to highlight selected text in yellow.
-2. **AIEverywhere**: An advanced extension utilizing the OpenAI ChatGPT API to offer various context menu items for text improvement, code commenting, summarization, and quiz generation.
+**AIEverywhere**: An advanced extension utilizing the OpenAI ChatGPT API to offer various context menu items for text improvement, code commenting, summarization, and quiz generation.
 
 ## Features
 
