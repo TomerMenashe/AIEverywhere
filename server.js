@@ -15,7 +15,7 @@ const port = 3000;
 /**
  * Sets the API key and endpoint URL for the OpenAI API.
  */
- const OPENAI_API_KEY = process.env.API_KEY;
+ const OPENAI_API_KEY = 'your openai key';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 /**
