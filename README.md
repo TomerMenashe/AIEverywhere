@@ -17,25 +17,25 @@ Welcome to the AIEverywhere Chrome Extension project! This extension enhances yo
 ## Screenshots
 
 ### Menu of the Extension
-![Menu of the Extension](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/menu.png)
+![Menu of the Extension](https://github.com/TomerMenashe/AIEverywhere/blob/menu.png)
 
 ### Improve English
-![Improve English](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/improve.png)
+![Improve English](https://github.com/TomerMenashe/AIEverywhere/improve.png)
 
 ### Improve English - Creative
-![Improve English - Creative](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/creative.png)
+![Improve English - Creative](https://github.com/TomerMenashe/AIEverywhere/blob/creative.png)
 
 ### Summarize Text
-![Summarize Text](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/sumText.png)
+![Summarize Text](https://github.com/TomerMenashe/AIEverywhere/blob/sumText.png)
 
 ### AI Quiz
-![AI Quiz](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/aiquiz.png)
+![AI Quiz](https://github.com/TomerMenashe/AIEverywhere/blob/main/aiquiz.png)
 
 ### Before Inserting Code
-![Before Inserting Code](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/beforeinsertingcode.png)
+![Before Inserting Code](https://github.com/TomerMenashe/AIEverywhere/blob/beforeinsertingcode.png)
 
 ### After Inserting Code
-![After Inserting Code](https://github.com/TomerMenashe/AIEverywhere/blob/main/screenshots/afterinsertingcode.png)
+![After Inserting Code](https://github.com/TomerMenashe/AIEverywhere/blob/afterinsertingcode.png)
 
 ## Getting Started
 
