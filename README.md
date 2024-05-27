@@ -17,25 +17,26 @@ Welcome to the AIEverywhere Chrome Extension project! This extension enhances yo
 ## Screenshots
 
 ### Before Inserting Code
-![Before Inserting Code](https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/beforeinsertingcode.png)
+<img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/beforeinsertingcode.png" alt="Before Inserting Code" width="400"/>
 
 ### Improve English
-![Improve English](https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/improve.png)
+<img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/improve.png" alt="Improve English" width="400"/>
 
 ### Improve English - Creative
-![Improve English - Creative](https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/creative.png)
+<img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/creative.png" alt="Improve English - Creative" width="400"/>
 
 ### Menu of the Extension
-![Menu of the Extension](https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/menu.png)
+<img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/menu.png" alt="Menu of the Extension" width="400"/>
 
 ### Summarize Text
-![Summarize Text](https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/sumText.png)
+<img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/sumText.png" alt="Summarize Text" width="400"/>
 
 ### AI Quiz
-![AI Quiz](https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/aiquiz.png)
+<img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/aiquiz.png" alt="AI Quiz" width="400"/>
 
 ### After Inserting Code
-![After Inserting Code](https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/afterinsertingcode.png)png)
+<img src="https://github.com/TomerMenashe/FITA-AIEverywhere/blob/main/afterinsertingcode.png" alt="After Inserting Code" width="400"/>
+
 
 ## Getting Started
 
