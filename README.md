@@ -54,22 +54,22 @@ npm server.js
 
 4. **Access the Application**
 
-- **1.Open your web browser and navigate to chrome://extensions/.**
+- **Open your web browser and navigate to chrome://extensions/.**
 
-- ***2.Enable Developer Mode**
+- **Enable Developer Mode**
 
 Enable "Developer mode" by toggling the switch at the top right of the Extensions page.
 
-- **3.Load Unpacked Extension**
+- **Load Unpacked Extension**
 
 Click the "Load unpacked" button that appears after enabling Developer mode.
 
-- **4.Select Extension Directory**
+- **Select Extension Directory**
 
 A file dialog will open. Navigate to the directory where your extension files are located (e.g., AIEverywhere/extension) and select it.
 
 
-- **5.Verify Extension Installation**
+- **Verify Extension Installation**
 
 Your extension should now appear in the list of installed extensions. Ensure it is enabled by toggling the switch next to it if necessary.
 
